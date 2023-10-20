@@ -35,7 +35,7 @@ func main() {
 	}
 
 	path := strings.Split(string(buf), "\r\n")[1]
-
+	fmt.Println(path)
 	if path == "/" {
 		_, err = conn.Write([]byte("HTTP/1.1 200 OK\r\n\r\n"))
 		if err != nil {
