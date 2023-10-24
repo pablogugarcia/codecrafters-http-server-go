@@ -83,7 +83,7 @@ func (r *Response) WriteBody(b []byte) *Response {
 func (r *Response) Send() {
 	statusLine := fmt.Sprintf("HTTP/1.1 %d %s \r\n", r.StatusCode, codeNames[r.StatusCode])
 	headers := r.Headers.String()
-	bodyLine := string(r.Body)
+	bodyLine := "\r\n" + string(r.Body)
 	debug("Sending: ", statusLine+headers+bodyLine+"\r\n")
 	r.conn.Write([]byte(statusLine + headers + bodyLine + "\r\n"))
 
