@@ -179,7 +179,7 @@ func main() {
 						debug("Err writing file: ", err.Error())
 						os.Exit(1)
 					}
-					res.WriteHeader("Content-type", "application/octet-stream").WriteStatusCode(201).Send()
+					res.WriteHeader("Content-type", "text/plain").WriteStatusCode(201).Send()
 					return
 				}
 			}
