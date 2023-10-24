@@ -20,6 +20,7 @@ type Request struct {
 	Path    string
 	conn    net.Conn
 	Headers Headers
+	Body    []byte
 }
 
 func NewRequest(conn net.Conn) *Request {
@@ -49,6 +50,8 @@ func (r *Request) parse(conn net.Conn) {
 		}
 		r.Headers[strings.Split(line, ": ")[0]] = strings.Split(line, ": ")[1]
 	}
+
+	r.Body = []byte(strings.Split(string(buf), "\r\n\r\n")[1])
 }
 
 type Headers map[string]string
@@ -71,6 +74,7 @@ type Response struct {
 var codeNames = map[int]string{
 	200: "OK",
 	404: "Not Found",
+	201: "CREATED",
 }
 
 func NewResponse(conn net.Conn) *Response {
@@ -153,16 +157,31 @@ func main() {
 			}
 
 			if strings.HasPrefix(req.Path, "/files") {
-				filePath := directory + strings.Split(req.Path, "/files")[1]
-				debug("Filepath: ", filePath)
-				content, err := ioutil.ReadFile(filePath)
-				if err != nil {
-					debug("Err reading file: ", err.Error())
-					res.WriteHeader("Content-type", "text/plain").WriteStatusCode(404).Send()
+				if req.Method == "GET" {
+
+					filePath := directory + strings.Split(req.Path, "/files")[1]
+					debug("Filepath: ", filePath)
+					content, err := ioutil.ReadFile(filePath)
+					if err != nil {
+						debug("Err reading file: ", err.Error())
+						res.WriteHeader("Content-type", "text/plain").WriteStatusCode(404).Send()
+						return
+					}
+					res.WriteHeader("Content-type", "application/octet-stream").WriteStatusCode(200).WriteBody(content).Send()
 					return
 				}
-				res.WriteHeader("Content-type", "application/octet-stream").WriteStatusCode(200).WriteBody(content).Send()
-				return
+
+				if req.Method == "POST" {
+					filePath := directory + strings.Split(req.Path, "/files")[1]
+
+					err = ioutil.WriteFile(filePath, req.Body, 0644)
+					if err != nil {
+						debug("Err writing file: ", err.Error())
+						os.Exit(1)
+					}
+					res.WriteHeader("Content-type", "application/octet-stream").WriteStatusCode(201).Send()
+					return
+				}
 			}
 			res.WriteHeader("Content-type", "text/plain").WriteStatusCode(404).Send()
 		}()
