@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"strings"
 
 	// Uncomment this block to pass the first stage
@@ -144,6 +145,15 @@ func main() {
 				return
 			}
 
+			if strings.HasPrefix(req.Path, "/files") {
+				content, err := ioutil.ReadFile(strings.Split(req.Path, "/files/")[1])
+				if err != nil {
+					res.WriteHeader("Content-type", "text/plain").WriteStatusCode(404).Send()
+					return
+				}
+				res.WriteHeader("Content-type", "application/octet-stream").WriteStatusCode(200).WriteBody(content).Send()
+				return
+			}
 			res.WriteHeader("Content-type", "text/plain").WriteStatusCode(404).Send()
 		}()
 	}
