@@ -9,6 +9,80 @@ import (
 	"os"
 )
 
+type Request struct {
+	Method string
+	Path   string
+	conn   net.Conn
+}
+
+func NewRequest(conn net.Conn) *Request {
+	req := &Request{conn: conn}
+	req.parse(conn)
+	return req
+}
+
+func (r *Request) parse(conn net.Conn) {
+	buf := make([]byte, 1024)
+	_, err := conn.Read(buf)
+	if err != nil {
+		fmt.Println("Error reading: ", err.Error())
+		os.Exit(1)
+	}
+
+	firstLine := strings.Split(string(buf), "\r\n")[0]
+
+	r.Path = strings.Split(firstLine, " ")[1]
+	r.Method = strings.Split(firstLine, " ")[0]
+}
+
+type Headers map[string]string
+
+func (h Headers) String() string {
+	var str string
+	for k, v := range h {
+		str += fmt.Sprintf("%s: %s\r\n", k, v)
+	}
+	return str
+}
+
+type Response struct {
+	conn       net.Conn
+	Headers    Headers
+	StatusCode int
+	Body       []byte
+}
+
+var codeNames = map[int]string{
+	200: "OK",
+	404: "Not Found",
+}
+
+func NewResponse(conn net.Conn) *Response {
+	return &Response{conn: conn, Headers: make(map[string]string)}
+}
+
+func (r *Response) WriteHeader(k, val string) *Response {
+	r.Headers[k] = val
+	return r
+}
+
+func (r *Response) WriteStatusCode(s int) *Response {
+	r.StatusCode = s
+	return r
+}
+
+func (r *Response) WriteBody(b []byte) *Response {
+	r.Body = b
+	return r
+}
+
+func (r *Response) Send() {
+	statusLine := fmt.Sprintf("HTTP/1.1 %d %s \r\n", r.StatusCode, codeNames[r.StatusCode])
+	headers := r.Headers.String()
+	bodyLine := string(r.Body)
+	r.conn.Write([]byte(statusLine + headers + bodyLine + "\r\n"))
+}
+
 func main() {
 	// You can use print statements as follows for debugging, they'll be visible when running tests.
 	fmt.Println("Logs from your program will appear here!")
@@ -27,29 +101,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	buf := make([]byte, 1024)
-	_, err = conn.Read(buf)
-	if err != nil {
-		fmt.Println("Error reading: ", err.Error())
-		os.Exit(1)
+	req := NewRequest(conn)
+	res := NewResponse(conn)
+
+	if req.Path == "/" {
+		res.WriteHeader("Content-type", "text/plain").WriteStatusCode(200).Send()
 	}
 
-	firstLine := strings.Split(string(buf), "\r\n")[0]
-
-	path := strings.Split(firstLine, " ")[1]
-	fmt.Println(path)
-	if path == "/" {
-		_, err = conn.Write([]byte("HTTP/1.1 200 OK\r\n\r\n"))
-		if err != nil {
-			fmt.Println("Error writing: ", err.Error())
-			os.Exit(1)
-		}
-	} else {
-		_, err = conn.Write([]byte("HTTP/1.1 404 Not Found\r\n\r\n"))
-		if err != nil {
-			fmt.Println("Error writing: ", err.Error())
-			os.Exit(1)
-		}
+	if strings.Contains(req.Path, "/echo") {
+		res.WriteHeader("Content-type", "text/plain").WriteStatusCode(200).WriteBody([]byte(strings.Split(req.Path, "/echo/")[1])).Send()
 	}
 
 	conn.Close()
