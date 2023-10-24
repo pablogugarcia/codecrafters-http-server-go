@@ -148,6 +148,7 @@ func main() {
 			if strings.HasPrefix(req.Path, "/files") {
 				content, err := ioutil.ReadFile(strings.Split(req.Path, "/files/")[1])
 				if err != nil {
+					debug("Err reading file: ", err.Error())
 					res.WriteHeader("Content-type", "text/plain").WriteStatusCode(404).Send()
 					return
 				}
