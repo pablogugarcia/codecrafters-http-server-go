@@ -9,6 +9,10 @@ import (
 	"os"
 )
 
+func debug(v ...interface{}) {
+	fmt.Fprintln(os.Stderr, v...)
+}
+
 type Request struct {
 	Method string
 	Path   string
@@ -80,6 +84,7 @@ func (r *Response) Send() {
 	statusLine := fmt.Sprintf("HTTP/1.1 %d %s \r\n", r.StatusCode, codeNames[r.StatusCode])
 	headers := r.Headers.String()
 	bodyLine := string(r.Body)
+	debug("Sending: ", statusLine+headers+bodyLine+"\r\n")
 	r.conn.Write([]byte(statusLine + headers + bodyLine + "\r\n"))
 }
 
@@ -104,11 +109,14 @@ func main() {
 	req := NewRequest(conn)
 	res := NewResponse(conn)
 
+	debug("Path is: ", req.Path)
+
 	if req.Path == "/" {
 		res.WriteHeader("Content-type", "text/plain").WriteStatusCode(200).Send()
 	}
 
 	if strings.Contains(req.Path, "/echo") {
+		debug("Sending response")
 		res.WriteHeader("Content-type", "text/plain").WriteStatusCode(200).WriteBody([]byte(strings.Split(req.Path, "/echo/")[1])).Send()
 	}
 
