@@ -40,6 +40,7 @@ func (r *Request) parse(conn net.Conn) {
 	r.Method = strings.Split(firstLine, " ")[0]
 
 	for _, line := range strings.Split(string(buf), "\r\n")[1:] {
+		debug("Parse line: ", line)
 		if line == "\r\n" {
 			break
 		}
