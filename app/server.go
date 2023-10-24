@@ -14,9 +14,10 @@ func debug(v ...interface{}) {
 }
 
 type Request struct {
-	Method string
-	Path   string
-	conn   net.Conn
+	Method  string
+	Path    string
+	conn    net.Conn
+	Headers Headers
 }
 
 func NewRequest(conn net.Conn) *Request {
@@ -37,6 +38,13 @@ func (r *Request) parse(conn net.Conn) {
 
 	r.Path = strings.Split(firstLine, " ")[1]
 	r.Method = strings.Split(firstLine, " ")[0]
+
+	for _, line := range strings.Split(string(buf), "\r\n")[1:] {
+		if line == "\r\n" {
+			break
+		}
+		r.Headers[strings.Split(line, ": ")[0]] = strings.Split(line, ": ")[1]
+	}
 }
 
 type Headers map[string]string
@@ -120,9 +128,13 @@ func main() {
 		return
 	}
 
-	if strings.Contains(req.Path, "/echo") {
-		debug("Sending response")
+	if strings.HasPrefix(req.Path, "/echo") {
 		res.WriteHeader("Content-type", "text/plain").WriteStatusCode(200).WriteBody([]byte(strings.Split(req.Path, "/echo/")[1])).Send()
+		return
+	}
+
+	if strings.HasPrefix(req.Path, "/user-agent") {
+		res.WriteHeader("Content-type", "text/plain").WriteStatusCode(200).WriteBody([]byte(req.Headers["User-Agent"])).Send()
 		return
 	}
 
