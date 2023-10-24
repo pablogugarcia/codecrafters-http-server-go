@@ -173,7 +173,7 @@ func main() {
 
 				if req.Method == "POST" {
 					filePath := directory + strings.Split(req.Path, "/files")[1]
-
+					debug("File content: ", string(req.Body))
 					err = ioutil.WriteFile(filePath, req.Body, 0644)
 					if err != nil {
 						debug("Err writing file: ", err.Error())
