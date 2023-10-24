@@ -41,7 +41,8 @@ func (r *Request) parse(conn net.Conn) {
 
 	for _, line := range strings.Split(string(buf), "\r\n")[1:] {
 		debug("Parse line: ", line)
-		if line == "\r\n" {
+		key := strings.Split(line, ": ")[0]
+		if key == "" {
 			break
 		}
 		r.Headers[strings.Split(line, ": ")[0]] = strings.Split(line, ": ")[1]
