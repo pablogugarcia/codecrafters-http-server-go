@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"strings"
@@ -103,10 +104,14 @@ func (r *Response) Send() {
 	r.conn.Close()
 }
 
+var directory string
+
 func main() {
 	// You can use print statements as follows for debugging, they'll be visible when running tests.
 	fmt.Println("Logs from your program will appear here!")
 
+	flag.StringVar(&directory, "d", ".", "the directory of static files to host")
+	flag.Parse()
 	// Uncomment this block to pass the first stage
 
 	l, err := net.Listen("tcp", "0.0.0.0:4221")
@@ -146,7 +151,9 @@ func main() {
 			}
 
 			if strings.HasPrefix(req.Path, "/files") {
-				content, err := ioutil.ReadFile(strings.Split(req.Path, "/files/")[1])
+				filePath := directory + strings.Split(req.Path, "/files")[1]
+				debug("Filepath: ", filePath)
+				content, err := ioutil.ReadFile(filePath)
 				if err != nil {
 					debug("Err reading file: ", err.Error())
 					res.WriteHeader("Content-type", "text/plain").WriteStatusCode(404).Send()
