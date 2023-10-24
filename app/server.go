@@ -51,7 +51,7 @@ func (r *Request) parse(conn net.Conn) {
 		r.Headers[strings.Split(line, ": ")[0]] = strings.Split(line, ": ")[1]
 	}
 
-	r.Body = []byte(strings.Split(string(buf), "\r\n\r\n")[1] + "\r\n")
+	r.Body = []byte(strings.Trim(strings.Split(string(buf), "\r\n\r\n")[1], "\r\n"))
 }
 
 type Headers map[string]string
