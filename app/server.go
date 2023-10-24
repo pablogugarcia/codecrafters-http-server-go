@@ -77,6 +77,8 @@ func (r *Response) WriteStatusCode(s int) *Response {
 
 func (r *Response) WriteBody(b []byte) *Response {
 	r.Body = b
+
+	r.Headers["Content-Length"] = fmt.Sprintf("%d", len(b))
 	return r
 }
 
