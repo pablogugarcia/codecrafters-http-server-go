@@ -114,31 +114,35 @@ func main() {
 		os.Exit(1)
 	}
 
-	conn, err := l.Accept()
-	if err != nil {
-		fmt.Println("Error accepting connection: ", err.Error())
-		os.Exit(1)
+	for {
+
+		conn, err := l.Accept()
+		if err != nil {
+			fmt.Println("Error accepting connection: ", err.Error())
+			os.Exit(1)
+		}
+
+		req := NewRequest(conn)
+		res := NewResponse(conn)
+
+		debug("Path is: ", req.Path)
+
+		if req.Path == "/" {
+			res.WriteHeader("Content-type", "text/plain").WriteStatusCode(200).Send()
+			return
+		}
+
+		if strings.HasPrefix(req.Path, "/echo") {
+			res.WriteHeader("Content-type", "text/plain").WriteStatusCode(200).WriteBody([]byte(strings.Split(req.Path, "/echo/")[1])).Send()
+			return
+		}
+
+		if strings.HasPrefix(req.Path, "/user-agent") {
+			res.WriteHeader("Content-type", "text/plain").WriteStatusCode(200).WriteBody([]byte(req.Headers["User-Agent"])).Send()
+			return
+		}
+
+		res.WriteHeader("Content-type", "text/plain").WriteStatusCode(404).Send()
+
 	}
-
-	req := NewRequest(conn)
-	res := NewResponse(conn)
-
-	debug("Path is: ", req.Path)
-
-	if req.Path == "/" {
-		res.WriteHeader("Content-type", "text/plain").WriteStatusCode(200).Send()
-		return
-	}
-
-	if strings.HasPrefix(req.Path, "/echo") {
-		res.WriteHeader("Content-type", "text/plain").WriteStatusCode(200).WriteBody([]byte(strings.Split(req.Path, "/echo/")[1])).Send()
-		return
-	}
-
-	if strings.HasPrefix(req.Path, "/user-agent") {
-		res.WriteHeader("Content-type", "text/plain").WriteStatusCode(200).WriteBody([]byte(req.Headers["User-Agent"])).Send()
-		return
-	}
-
-	res.WriteHeader("Content-type", "text/plain").WriteStatusCode(404).Send()
 }
