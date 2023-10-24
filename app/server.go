@@ -110,7 +110,7 @@ func main() {
 	// You can use print statements as follows for debugging, they'll be visible when running tests.
 	fmt.Println("Logs from your program will appear here!")
 
-	flag.StringVar(&directory, "d", ".", "the directory of static files to host")
+	flag.StringVar(&directory, "directory ", ".", "the directory of static files to host")
 	flag.Parse()
 	// Uncomment this block to pass the first stage
 
