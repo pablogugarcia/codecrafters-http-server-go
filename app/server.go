@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"strconv"
 	"strings"
 
 	// Uncomment this block to pass the first stage
@@ -52,13 +51,7 @@ func (r *Request) parse(conn net.Conn) {
 		r.Headers[strings.Split(line, ": ")[0]] = strings.Split(line, ": ")[1]
 	}
 
-	lastline := strings.Split(string(buf), "\r\n\r\n")[1]
-	slice, err := strconv.Atoi(r.Headers["Content-Length"])
-	if err != nil {
-		debug("Err parsing content length: ", err.Error())
-		os.Exit(1)
-	}
-	r.Body = []byte(lastline[:slice])
+	r.Body = []byte(strings.Trim(strings.Split(string(buf), "\r\n\r\n")[1], "\x00"))
 }
 
 type Headers map[string]string
