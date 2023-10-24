@@ -21,7 +21,7 @@ type Request struct {
 }
 
 func NewRequest(conn net.Conn) *Request {
-	req := &Request{conn: conn}
+	req := &Request{conn: conn, Headers: make(Headers)}
 	req.parse(conn)
 	return req
 }
