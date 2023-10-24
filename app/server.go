@@ -86,6 +86,8 @@ func (r *Response) Send() {
 	bodyLine := string(r.Body)
 	debug("Sending: ", statusLine+headers+bodyLine+"\r\n")
 	r.conn.Write([]byte(statusLine + headers + bodyLine + "\r\n"))
+
+	r.conn.Close()
 }
 
 func main() {
@@ -113,12 +115,14 @@ func main() {
 
 	if req.Path == "/" {
 		res.WriteHeader("Content-type", "text/plain").WriteStatusCode(200).Send()
+		return
 	}
 
 	if strings.Contains(req.Path, "/echo") {
 		debug("Sending response")
 		res.WriteHeader("Content-type", "text/plain").WriteStatusCode(200).WriteBody([]byte(strings.Split(req.Path, "/echo/")[1])).Send()
+		return
 	}
 
-	conn.Close()
+	res.WriteHeader("Content-type", "text/plain").WriteStatusCode(404).Send()
 }
